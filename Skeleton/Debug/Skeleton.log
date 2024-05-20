@@ -1,0 +1,6 @@
+﻿  Skeleton.cpp
+C:\Users\User\Documents\grafika\nagyhf\Programs\Skeleton\Skeleton\framework.h(165,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  (compiling source file 'Skeleton.cpp')
+  
+C:\Users\User\Documents\grafika\nagyhf\Programs\Skeleton\Skeleton\Skeleton.cpp(137,14): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  Skeleton.vcxproj -> C:\Users\User\Documents\grafika\nagyhf\Programs\Skeleton\bin\Skeleton.exe
