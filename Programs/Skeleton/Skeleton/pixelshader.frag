@@ -13,11 +13,13 @@ uniform float cameraFov;	// field of view of the camera
 uniform vec3 skyColor;		// color of the primitive
 uniform mat4 camToWorldMatrix;	// camera to world matrix
 uniform vec3 lightDirection;
-uniform int frameCount;
 uniform int maxRecursionDepth;
 uniform int numRaysPerPixel;
+uniform int frameCount;
 uniform vec3 lightColor;
 uniform float lightIntensity;
+uniform mat4 colorDefficiencyMatrix;
+
 out vec4 outColor;		// computed color of the current pixel
 
 /*
@@ -100,12 +102,13 @@ struct SphereData {
 struct LensData {
 	int lensType; // lens type enum
 	SphereData sphere1;
-	// spheres2's radius is not needed for biconvex and biconcave lenses,
-	// only their center. Their center is on the plane on the flat side.
+	// for planar lenses, this is the sphere part
+	// for biconvex and bioncave lenses this is the first sphere (that is pointing forward)
+	// for meniscus lenses this is the front sphere part
 	SphereData sphere2;
-	// centerRadius is the radius of the "circle" in the middle of the lens
-	// this circle is perpendicular to the vector connecting the spheres' centers.
-	// hence the lenses will be carved out of a cylinder with radius of centerRadius.
+	// for biconvex and biconcave lenses this is the second sphere (that is pointing backward)
+	// for meniscus lenses this is the back sphere part
+	// for planar lenses this is used to determine the direction of the lens
 	float centerRadius; 
 };
 
@@ -131,31 +134,31 @@ struct IntersectionResult {
 // TODO: uniform numObjects and object array
 
 // temp:
-const int numObjects = 5;
+const int numObjects = 12;
 
 #define EMPTY_SPHERE_DATA SphereData(0, vec3(0, 0, 0))
 #define EMPTY_LENS_DATA LensData(0, EMPTY_SPHERE_DATA, EMPTY_SPHERE_DATA, 0.0f)
 
 Object objects[numObjects] = {
-	Object(SPHERE, ObjectData(SphereData(5.5, vec3(-5, 0, 10)), EMPTY_LENS_DATA), Material(vec3(1, 0, 0), 0.5, 0.1, 1.0)),
-	Object(SPHERE, ObjectData(SphereData(5, vec3(0, 0, 20)), EMPTY_LENS_DATA), Material(vec3(0, 1, 0), 0.5, 0.1, 1.0)),
-	Object(SPHERE, ObjectData(SphereData(3.5, vec3(5, 0, 10)), EMPTY_LENS_DATA), Material(vec3(0, 0, 1), 0.5, 0.1, 1.0)),
-	Object(SPHERE, ObjectData(SphereData(5, vec3(0, 0, 20)), EMPTY_LENS_DATA), Material(vec3(1, 1, 1), 0.5, 0.1, 1.0)),
+	Object(SPHERE, ObjectData(SphereData(5.5, vec3(-5, 0, 10)), EMPTY_LENS_DATA), Material(vec3(1, 0, 0), 0.0, 0.1, 0.0)),
+	Object(SPHERE, ObjectData(SphereData(5, vec3(0, 0, 20)), EMPTY_LENS_DATA), Material(vec3(0, 1, 0), 0.2, 0.1, 0.0)),
+	Object(SPHERE, ObjectData(SphereData(3.5, vec3(5, 0, 10)), EMPTY_LENS_DATA), Material(vec3(0, 0, 1), 0.6, 0.1, 0.0)),
+	Object(SPHERE, ObjectData(SphereData(5, vec3(0, 0, 20)), EMPTY_LENS_DATA), Material(vec3(1, 1, 1), 0.9, 0.1, 0.0)),
 	Object(
 		LENS, 
 		ObjectData(
 			EMPTY_SPHERE_DATA, 
 			LensData(	
-				PLANO_CONVEX_LENS, 
+				NEGATIVE_MENISCUS, 
+				SphereData(
+					10,
+					vec3(0, 0, -7)
+				),
 				SphereData(
 					5, 
-					vec3(0, 0, 8)
+					vec3(0, 0, -4)
 				), 
-				SphereData(
-					0,
-					vec3(0, 0, 2.9)
-				),
-				4.0
+				2.0
 			)
 		), 
 		Material(
@@ -164,7 +167,129 @@ Object objects[numObjects] = {
 			0.1, 
 			1.516
 		)
-	)
+	),
+	Object(
+		LENS, 
+		ObjectData(
+			EMPTY_SPHERE_DATA, 
+			LensData(	
+				POSITIVE_MENISCUS, 
+				SphereData(
+					3,
+					vec3(8, 0, 0)
+				),
+				SphereData(
+					4, 
+					vec3(7.5, 0, 0.5)
+				), 
+				2.0
+			)
+		), 
+		Material(
+			vec3(0.4), 
+			0.5, 
+			0.1, 
+			1.516
+		)
+	),
+	Object(
+		LENS, 
+		ObjectData(
+			EMPTY_SPHERE_DATA, 
+			LensData(	
+				BICONVEX_LENS, 
+				SphereData(
+					10,
+					vec3(-5, 0, -9)
+				),
+				SphereData(
+					5, 
+					vec3(-5, 0, 3)
+				), 
+				2.0
+			)
+		), 
+		Material(
+			vec3(0.4), 
+			0.5, 
+			0.1, 
+			1.516
+		)
+	),
+	Object(
+		LENS, 
+		ObjectData(
+			EMPTY_SPHERE_DATA, 
+			LensData(	
+				BICONCAVE_LENS, 
+				SphereData(
+					10,
+					vec3(-10, 0, 10.5)
+				),
+				SphereData(
+					5, 
+					vec3(-10, 0, -5)
+				), 
+				2.0
+			)
+		), 
+		Material(
+			vec3(0.4), 
+			0.5, 
+			0.1, 
+			1.516
+		)
+	),
+	Object(SPHERE, ObjectData(SphereData(5.5, vec3(-15, 0, 10)), EMPTY_LENS_DATA), Material(vec3(0.7, 0.2, 0), 0.1, 0.1, 0.0)),
+	Object(
+		LENS, 
+		ObjectData(
+			EMPTY_SPHERE_DATA, 
+			LensData(	
+				PLANO_CONVEX_LENS, 
+				SphereData(
+					3,
+					vec3(10, 0, 0)
+				),
+				SphereData(
+					0, 
+					vec3(9, 0, 2)
+				), 
+				2.0
+			)
+		), 
+		Material(
+			vec3(0.4), 
+			0.5, 
+			0.1, 
+			1.516
+		)
+	),
+	Object(
+		LENS, 
+		ObjectData(
+			EMPTY_SPHERE_DATA, 
+			LensData(	
+				PLANO_CONCAVE_LENS, 
+				SphereData(
+					3,
+					vec3(0, 5.5, -3.5)
+				),
+				SphereData(
+					0, 
+					vec3(0, 5, 0)
+				), 
+				2.0
+			)
+		), 
+		Material(
+			vec3(0.4), 
+			0.5, 
+			0.1, 
+			1.516
+		)
+	),
+	Object(SPHERE, ObjectData(SphereData(3, vec3(10, 5, 10)), EMPTY_LENS_DATA), Material(vec3(0.1, 0.1, 0.9), 0.0, 0.1, 0.0)),
 };
 
 uint hash( uint x ) {
@@ -401,10 +526,10 @@ void intersectWithLens(Ray ray, LensData lensData, inout IntersectionResult inte
 	int numPrimitivesToIntersect;
 
 	switch (lensData.lensType) {
-	case BICONVEX_LENS:
 	case PLANO_CONVEX_LENS:
 		numPrimitivesToIntersect = 2;
 		break;
+	case BICONVEX_LENS:
 	case BICONCAVE_LENS:
 	case PLANO_CONCAVE_LENS:
 	case POSITIVE_MENISCUS:
@@ -471,7 +596,59 @@ void intersectWithLens(Ray ray, LensData lensData, inout IntersectionResult inte
 		}
 
 	} else {
+
+		bool flipLensForward = lensData.lensType == BICONVEX_LENS || lensData.lensType == POSITIVE_MENISCUS || lensData.lensType == NEGATIVE_MENISCUS;
+
+		if (flipLensForward) {
+			lensForward = -lensForward;
+		}
 	
+		const int sphere1IntersectionResultIndex = 0;
+		const int sphere2IntersectionResultIndex = 1;
+		const int cylinderIntersectionResultIndex = 2;
+
+		bool isSphere1PartForwardFacing = lensData.lensType == BICONVEX_LENS || lensData.lensType == POSITIVE_MENISCUS || lensData.lensType == NEGATIVE_MENISCUS;
+		bool isSphere2PartForwardFacing = lensData.lensType == BICONCAVE_LENS || lensData.lensType == POSITIVE_MENISCUS || lensData.lensType == NEGATIVE_MENISCUS;
+
+		vec3 sphere1PartDirection = isSphere1PartForwardFacing ? -lensForward : lensForward;
+		vec3 sphere2PartDirection = isSphere2PartForwardFacing ? -lensForward : lensForward;
+
+		float maxAngle1 = asin(lensData.centerRadius / lensData.sphere1.radius);
+		float maxAngle2 = asin(lensData.centerRadius / lensData.sphere2.radius);
+
+		intersectWithSpherePart(ray, lensData.sphere1, sphere1PartDirection, maxAngle1, intersectionResults[sphere1IntersectionResultIndex]);
+		intersectWithSpherePart(ray, lensData.sphere2, sphere2PartDirection, maxAngle2, intersectionResults[sphere2IntersectionResultIndex]);
+
+		// check for cylinder
+
+		float R1 = lensData.sphere1.radius;
+		float R2 = lensData.sphere2.radius;
+		float r = lensData.centerRadius;
+		float dc = abs(length(sphere2Center - sphere1Center));
+
+		float height;
+		if (lensData.lensType == BICONCAVE_LENS) {
+			height = dc - sqrt(R1 * R1 - r * r) - sqrt(R2 * R2 - r * r);
+		} else if (lensData.lensType == BICONVEX_LENS) {
+			height = sqrt(R1 * R1 - r * r) + sqrt(R2 * R2 - r * r) - dc;
+		} else if (lensData.lensType == POSITIVE_MENISCUS) {
+			height = dc + sqrt(R2 * R2 - r * r) - sqrt(R1 * R1 - r * r);
+		} else {
+			height = sqrt(R1 * R1 - r * r) - dc - sqrt(R2 * R2 - r * r);
+		}
+
+		vec3 cylinderCenter;
+		if (lensData.lensType == BICONVEX_LENS) {
+			cylinderCenter = sphere2Center + lensForward * (sqrt(R2 * R2 - r * r) - height);
+		} else if (lensData.lensType == BICONCAVE_LENS) {
+			cylinderCenter = sphere1Center + lensForward * (sqrt(R1 * R1 - r * r));
+		} else if (lensData.lensType == POSITIVE_MENISCUS) {
+			cylinderCenter = sphere2Center - lensForward * (sqrt(R2 * R2 - r * r));
+		} else {
+			cylinderCenter = sphere2Center - lensForward * (sqrt(R2 * R2 - r * r) + height);
+		}
+
+		intersectWithCylinder(ray, cylinderCenter, lensForward, lensData.centerRadius, height, intersectionResults[cylinderIntersectionResultIndex]);
 	}
 
 	intersectionResult.hit = false;
@@ -524,6 +701,9 @@ vec3 shootRay(Ray ray) {
 
 	bool hit = false;
 	float remainingEnergy = 1.0;
+	bool isInsideObject = false;
+
+	bool isRayBouncing = true;
 
 	for (int depth = 0; depth < maxRecursionDepth; depth++) {
 
@@ -534,52 +714,87 @@ vec3 shootRay(Ray ray) {
 		bool didRayHit = intersectWithScene(ray, closestHit, closestObjectDistance);
 
 		if (didRayHit == false) {
+			isRayBouncing = false;
 			break;
 		}
 		
 		hit = true;
 
-//			if (closestHit.material.reflectivity) {
-//				// reflect
-//				vec3 reflectionDirection = normalize(reflect(ray.direction, closestHit.normal));
-//
-//				vec3 coneTopMiddlePoint = closestHit.intersectionPoint + reflectionDirection;
-//				float randomAngle = random(gl_FragCoord.xy) * 2 * 3.14159265359;
-//				float randomRadius = random(gl_FragCoord.xy) * closestSphere.material.roughness;
-//				vec3 randomDirection = vec3(
-//						cos(randomAngle) * randomRadius, 
-//						random(gl_FragCoord.xy) * closestSphere.material.roughness, 
-//						sin(randomAngle) * randomRadius
-//				);
-//				
-//				// defacto recursion
-//				ray = Ray(closestHit.intersectionPoint + reflectionDirection * 0.001, normalize(reflectionDirection + randomDirection));
-//
-//				vec3 color = closestSphere.material.color;
-//				float intensity = dot(closestHit.normal, -lightDirection);
-//				result.color += color * lightColor * lightIntensity * max(intensity, 0) * remainingEnergy;
-//				remainingEnergy *= closestSphere.material.reflectivity;
-//				continue;
-//			}
+		if (closestHit.object.material.n > 0) {
+			// refract
+			vec3 normal = closestHit.normal;
+			
+			if (isInsideObject) {
+				normal = -normal;
+			}
 
-//			vec3 color = closestSphere.material.color;
-//			float intensity = dot(closestHit.normal, -lightDirection);
-//			result.color += color * lightColor * lightIntensity * max(intensity, 0) * remainingEnergy;
-//			remainingEnergy *= closestSphere.material.reflectivity;
-//			break;
+			if (dot(ray.direction, normal) > 0) {
+				normal = -normal;
+			}
+
+			float n1 = isInsideObject ? closestHit.object.material.n : 1.0;
+			float n2 = isInsideObject ? 1.0 : closestHit.object.material.n;
+
+			float n = n1 / n2;
+			float cosI = dot(-ray.direction, normal);
+			float sinT2 = n * n * (1.0 - cosI * cosI);
+
+			if (sinT2 > 1.0) {
+				// total internal reflection
+				ray = Ray(closestHit.intersectionPoint + ray.direction * 0.001, reflect(ray.direction, normal));
+				isInsideObject = !isInsideObject;
+				remainingEnergy *= 0.8;
+				continue;
+			}
+
+			vec3 refractedDirection = normalize(n * ray.direction + (n * cosI - sqrt(1.0 - sinT2)) * normal);
+
+			ray = Ray(closestHit.intersectionPoint + refractedDirection * 0.001, refractedDirection);
+
+			vec3 color = closestHit.object.material.diffuseColor;
+			float intensity = dot(closestHit.normal, -lightDirection);
+			result += color * lightColor * lightIntensity * max(intensity, 0) * remainingEnergy;
+			remainingEnergy *= 0.8;
+
+			continue;
+		}
+
+		if (closestHit.object.material.reflectivity > 0) {
+			// reflect
+			vec3 reflectionDirection = normalize(reflect(ray.direction, closestHit.normal));
+
+			vec3 coneTopMiddlePoint = closestHit.intersectionPoint + reflectionDirection;
+			float randomAngle = random(gl_FragCoord.xy) * TWO_PI;
+			float randomRadius = random(gl_FragCoord.xy) * closestHit.object.material.roughness;
+			vec3 randomDirection = vec3(
+					cos(randomAngle) * randomRadius, 
+					random(gl_FragCoord.xy) * closestHit.object.material.roughness, 
+					sin(randomAngle) * randomRadius
+			);
+				
+			// defacto recursion
+			ray = Ray(closestHit.intersectionPoint + reflectionDirection * 0.001, normalize(reflectionDirection + randomDirection));
+
+			vec3 color = closestHit.object.material.diffuseColor;
+			float intensity = dot(closestHit.normal, -lightDirection);
+			result += color * lightColor * lightIntensity * max(intensity, 0) * remainingEnergy;
+			remainingEnergy *= closestHit.object.material.reflectivity;
+			continue;
+		}
+
 
 		vec3 color = closestHit.object.material.diffuseColor;
 		float intensity = max(dot(closestHit.normal, -lightDirection), 0);
 		result += color + lightColor * lightIntensity * max(intensity, 0);
-	
+		remainingEnergy = 0;
+
+		isRayBouncing = false;
 		break; // we have no refraction or reflection, so we stop
 	}
 
-	if (hit) {
-		return result;
-	}
+	result += remainingEnergy * skyColor;
 
-	return skyColor;
+	return result;
 }
 
 void main() {	
@@ -608,6 +823,7 @@ void main() {
 		result += color / numRaysPerPixel;
 	}
 
-	outColor = vec4(result, 1);
+//	outColor = vec4(1, 1, 0, 1);
+	outColor = vec4(result, 1) * colorDefficiencyMatrix;
 //	outColor = vec4(random(gl_FragCoord.xy), random(gl_FragCoord.xy), random(gl_FragCoord.xy), random(gl_FragCoord.xy));
 }
