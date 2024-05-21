@@ -139,7 +139,7 @@ const int numObjects = 12;
 #define EMPTY_SPHERE_DATA SphereData(0, vec3(0, 0, 0))
 #define EMPTY_LENS_DATA LensData(0, EMPTY_SPHERE_DATA, EMPTY_SPHERE_DATA, 0.0f)
 
-Object objects[numObjects] = {
+Object objects[numObjects] = Object[](
 	Object(SPHERE, ObjectData(SphereData(5.5, vec3(-5, 0, 10)), EMPTY_LENS_DATA), Material(vec3(1, 0, 0), 0.0, 0.1, 0.0)),
 	Object(SPHERE, ObjectData(SphereData(5, vec3(0, 0, 20)), EMPTY_LENS_DATA), Material(vec3(0, 1, 0), 0.2, 0.1, 0.0)),
 	Object(SPHERE, ObjectData(SphereData(3.5, vec3(5, 0, 10)), EMPTY_LENS_DATA), Material(vec3(0, 0, 1), 0.6, 0.1, 0.0)),
@@ -289,8 +289,8 @@ Object objects[numObjects] = {
 			1.516
 		)
 	),
-	Object(SPHERE, ObjectData(SphereData(3, vec3(10, 5, 10)), EMPTY_LENS_DATA), Material(vec3(0.1, 0.1, 0.9), 0.0, 0.1, 0.0)),
-};
+	Object(SPHERE, ObjectData(SphereData(3, vec3(10, 5, 10)), EMPTY_LENS_DATA), Material(vec3(0.1, 0.1, 0.9), 0.0, 0.1, 0.0))
+);
 
 uint hash( uint x ) {
 	x += ( x << 10u );

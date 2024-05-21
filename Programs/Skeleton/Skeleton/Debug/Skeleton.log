@@ -1,11 +1,1 @@
-﻿  framework.cpp
-E:\Grafika\GrafikaNagyHF\Programs\Skeleton\Skeleton\framework.h(165,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  (compiling source file 'framework.cpp')
-  
-  Skeleton.cpp
-E:\Grafika\GrafikaNagyHF\Programs\Skeleton\Skeleton\framework.h(165,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  (compiling source file 'Skeleton.cpp')
-  
-E:\Grafika\GrafikaNagyHF\Programs\Skeleton\Skeleton\Skeleton.cpp(137,14): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  Generating Code...
-  Skeleton.vcxproj -> E:\Grafika\GrafikaNagyHF\Programs\Skeleton\bin\Skeleton.exe
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(439,5): error MSB8020: The build tools for v143 (Platform Toolset = 'v143') cannot be found. To build using the v143 build tools, please install v143 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution".

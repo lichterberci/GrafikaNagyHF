@@ -469,7 +469,7 @@ void onInitialization() {
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);     // stride and offset: it is tightly packed
 
 	// read fragment shader from file
-	auto file = fopen("C:\\Users\\User\\Documents\\grafika\\nagyhf\\Programs\\Skeleton\\Skeleton\\pixelshader.frag", "r");
+	auto file = fopen("..\\Skeleton\\pixelshader.frag", "r");
 
 	if (file == nullptr) {
 		throw "Failed to open fragment shader file.";
