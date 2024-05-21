@@ -211,7 +211,6 @@ void intersectWithPlane(Ray ray, vec3 point, vec3 normal, inout IntersectionResu
 }
 
 void intersectWithSphereInTwoPoints(Ray ray, SphereData sphereData, inout IntersectionResult intersectionResult1, inout IntersectionResult intersectionResult2) {
-
 	
 	// implement intersecton test
 	vec3 oc = ray.startPoint - sphereData.center;
